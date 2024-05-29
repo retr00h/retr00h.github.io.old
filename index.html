@@ -1,1 +1,35 @@
-"Hello World" 
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV Plotter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        h1 {
+            margin-bottom: 20px;
+        }
+        input[type="file"] {
+            margin-bottom: 20px;
+        }
+        #chart {
+            width: 80%;
+            height: 400px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Daily data tracking plotter</h1>
+    <input type="file" id="fileInput" accept=".csv">
+    <div id="chart"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
