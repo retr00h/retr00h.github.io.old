@@ -20,6 +20,12 @@ document.getElementById('fileInput').addEventListener('change', function(event) 
 
             tensOfMinutes = getTens(data, actions);
             console.log(tensOfMinutes);
+            items = Object.entries(tensOfMinutes);
+            // Sort in descending order by value
+            items.sort((a, b) => b[1] - a[1]);
+            console.log(items);
+            sortedTensOfMinutes = Object.fromEntries(items);
+            console.log(sortedTensOfMinutes);
         };
         reader.readAsText(file);
     }
