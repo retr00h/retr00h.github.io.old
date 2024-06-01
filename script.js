@@ -8,7 +8,6 @@ document.getElementById('fileInput').addEventListener('change', function(event) 
             let actions = data.map(d => d.Action);
             actions = actions.filter(action => action != "");
             console.log("Read " + actions.length + " actions");
-            console.log(actions);
             // cols_to_remove = ['Action', 'Code', 'Time (tens of minutes)', 'Drank water (ml)', 'Drank soda (ml)', 'Drank beer (ml)',
             //       'Drank wine (ml)', 'Drank liquor (ml)', 'Lunch outside?', 'Dinner outside?', 'Had pizza (dinner)?',
             //       'Shower?', 'Poop?', 'Emotion intensity description', 'Emotion intensity value']
@@ -16,16 +15,22 @@ document.getElementById('fileInput').addEventListener('change', function(event) 
                 delete d["Action"];
                 delete d["Code"];
             });
-            console.log(data);
-
             tensOfMinutes = getTens(data, actions);
+            delete tensOfMinutes["undefined"];
             console.log(tensOfMinutes);
             items = Object.entries(tensOfMinutes);
             // Sort in descending order by value
             items.sort((a, b) => b[1] - a[1]);
             console.log(items);
-            sortedTensOfMinutes = Object.fromEntries(items);
-            console.log(sortedTensOfMinutes);
+            totalTime = 0;
+            for (const [_, value] of items) {
+                totalTime += value;
+            }
+            percentages = items;
+            for(i = 0, length = percentages.length; i < length; i++){
+                percentages[i][1] = percentages[i][1] / totalTime * 100;
+            }
+            drawChart(percentages);
         };
         reader.readAsText(file);
     }
@@ -63,4 +68,53 @@ function getTens(data, actions) {
     });
 
     return tens;
+}
+
+function drawChart(data) {
+    d3.select("#chart").select("svg").remove();
+
+    const svg = d3.select("#chart").append("svg")
+        .attr("width", "100%")
+        .attr("height", "500px");
+
+    const margin = { top: 20, right: 20, bottom: 30, left: 100 },
+        width = svg.node().getBoundingClientRect().width - margin.left - margin.right,
+        height = svg.node().getBoundingClientRect().height - margin.top - margin.bottom;
+
+    const g = svg.append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
+
+    const x = d3.scaleLinear().range([0, width]);
+    const y = d3.scaleBand().rangeRound([0, height]).padding(0.1);
+
+    x.domain([0, d3.max(data, d => d[1])]);
+    y.domain(data.map(d => d[0]));
+
+    g.append("g")
+        .attr("class", "x axis")
+        .attr("transform", `translate(0,${height})`)
+        .call(d3.axisBottom(x).ticks(5).tickSize(-height).tickFormat(d3.format("d")));
+
+    g.append("g")
+        .attr("class", "y axis")
+        .call(d3.axisLeft(y));
+
+    g.selectAll(".bar")
+        .data(data)
+        .enter().append("rect")
+        .attr("class", "bar")
+        .attr("y", d => y(d[0]))
+        .attr("height", y.bandwidth())
+        .attr("x", 0)
+        .attr("width", d => x(d[1]))
+        .attr("fill", "steelblue");
+
+    g.append("g")
+    .attr("class", "grid")
+    .attr("transform", `translate(0,${height})`)
+    .call(d3.axisBottom(x)
+        .ticks(10)
+        .tickSize(-height)
+        .tickFormat("")
+    );
 }
