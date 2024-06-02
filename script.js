@@ -1,39 +1,59 @@
-document.getElementById('fileInput').addEventListener('change', function(event) {
+let startDate = null;
+let endDate = null;
+let fullData = null;
+
+function readInput(event) {
     const file = event.target.files[0];
     if (file) {
         const reader = new FileReader();
         reader.onload = function(e) {
             const text = e.target.result;
-            const data = d3.csvParse(text);
-            let actions = data.map(d => d.Action);
-            actions = actions.filter(action => action != "");
-            console.log("Read " + actions.length + " actions");
-            // cols_to_remove = ['Action', 'Code', 'Time (tens of minutes)', 'Drank water (ml)', 'Drank soda (ml)', 'Drank beer (ml)',
-            //       'Drank wine (ml)', 'Drank liquor (ml)', 'Lunch outside?', 'Dinner outside?', 'Had pizza (dinner)?',
-            //       'Shower?', 'Poop?', 'Emotion intensity description', 'Emotion intensity value']
-            data.forEach(d => {
-                delete d["Action"];
-                delete d["Code"];
-            });
-            tensOfMinutes = getTens(data, actions);
-            delete tensOfMinutes["undefined"];
-            console.log(tensOfMinutes);
-            items = Object.entries(tensOfMinutes);
-            // Sort in descending order by value
-            items.sort((a, b) => b[1] - a[1]);
-            console.log(items);
-            totalTime = 0;
-            for (const [_, value] of items) {
-                totalTime += value;
-            }
-            percentages = items;
-            for(i = 0, length = percentages.length; i < length; i++){
-                percentages[i][1] = percentages[i][1] / totalTime * 100;
-            }
-            drawChart(percentages);
-        };
+            fullData = d3.csvParse(text);
+        }
         reader.readAsText(file);
     }
+}
+
+document.getElementById('startDate').addEventListener('change', function(_) {
+    startDate = document.getElementById('startDate').value;
+    console.log("Start date changed");
+});
+document.getElementById('endDate').addEventListener('change', function(_) {
+    endDate = document.getElementById('endDate').value;
+    console.log("End date changed");
+});
+
+document.getElementById('fileInput').addEventListener('change', function(event) {
+    readInput(event);
+});
+
+document.getElementById('buildCharts').addEventListener('click', function(_) {
+    let actions = fullData.map(d => d.Action);
+    actions = actions.filter(action => action != "");
+    console.log("Read " + actions.length + " actions");
+    // cols_to_remove = ['Action', 'Code', 'Time (tens of minutes)', 'Drank water (ml)', 'Drank soda (ml)', 'Drank beer (ml)',
+    //       'Drank wine (ml)', 'Drank liquor (ml)', 'Lunch outside?', 'Dinner outside?', 'Had pizza (dinner)?',
+    //       'Shower?', 'Poop?', 'Emotion intensity description', 'Emotion intensity value']
+    fullData.forEach(d => {
+        delete d["Action"];
+        delete d["Code"];
+    });
+    tensOfMinutes = getTens(fullData, actions);
+    delete tensOfMinutes["undefined"];
+    console.log(tensOfMinutes);
+    items = Object.entries(tensOfMinutes);
+    // Sort in descending order by value
+    items.sort((a, b) => b[1] - a[1]);
+    console.log(items);
+    totalTime = 0;
+    for (const [_, value] of items) {
+        totalTime += value;
+    }
+    percentages = items;
+    for(i = 0, length = percentages.length; i < length; i++){
+        percentages[i][1] = percentages[i][1] / totalTime * 100;
+    }
+    drawChart(percentages);
 });
 
 function getTens(data, actions) {
