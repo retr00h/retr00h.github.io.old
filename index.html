@@ -33,7 +33,10 @@
     <label>Start date: <input id="startDate" type="date"></label>
     <label>End date: <input id="endDate" type="date"></label>
     <input type="file" id="fileInput" accept=".csv">
-    <button id="buildCharts">Build charts</button>
+    <div>
+        <button id="filter" disabled="true">Filter data</button>
+        <button id="buildCharts" disabled="true">Build charts</button>
+    </div>
     <div id="chart"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
