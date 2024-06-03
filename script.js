@@ -1,6 +1,7 @@
 let startDate = null;
 let endDate = null;
 let fullData = null;
+let actions = null;
 let filteredData = null;
 
 const times = ["0.00","0.10","0.20","0.30","0.40","0.50","1.00","1.10","1.20","1.30","1.40","1.50",
@@ -23,6 +24,13 @@ function readInput(event) {
         reader.onload = function(e) {
             const text = e.target.result;
             fullData = d3.csvParse(text);
+            actions = fullData.map(d => d.Action);
+            actions = actions.filter(action => action != "");
+            console.log("Read " + actions.length + " actions");
+            fullData.forEach(d => {
+                delete d["Action"];
+                delete d["Code"];
+            });
 
             fullData = fullData.filter(row => {
                 ok = true;
@@ -33,6 +41,7 @@ function readInput(event) {
                 return ok;
             });
             filteredData = fullData;
+            console.log("Read data about " + filteredData.length + " days");
         }
         reader.readAsText(file);
 
@@ -40,55 +49,6 @@ function readInput(event) {
         document.getElementById('buildCharts').disabled = false; 
     }
 }
-
-document.getElementById('startDate').addEventListener('change', function(_) {
-    startDate = new Date(document.getElementById('startDate').value);
-    console.log("Start date changed");
-});
-document.getElementById('endDate').addEventListener('change', function(_) {
-    endDate = new Date(document.getElementById('endDate').value);
-    console.log("End date changed");
-});
-
-document.getElementById('fileInput').addEventListener('change', function(event) {
-    readInput(event);
-});
-
-document.getElementById('filter').addEventListener('click', function(_) {
-    filteredData = fullData.filter(d => {
-        const date = new Date(d.Date);
-        return date >= startDate && date <= endDate;
-    });
-    console.log("Filtered data now contains " + filteredData.length + " elements");
-});
-
-document.getElementById('buildCharts').addEventListener('click', function(_) {
-    let actions = fullData.map(d => d.Action);
-    actions = actions.filter(action => action != "");
-    console.log("Read " + actions.length + " actions");
-    
-    fullData.forEach(d => {
-        delete d["Action"];
-        delete d["Code"];
-    });
-    tensOfMinutes = getTens(fullData, actions);
-    delete tensOfMinutes["undefined"];
-    console.log(tensOfMinutes);
-    items = Object.entries(tensOfMinutes);
-    // Sort in descending order by value
-    items.sort((a, b) => b[1] - a[1]);
-    console.log(items);
-    totalTime = 0;
-    for (const [_, value] of items) {
-        totalTime += value;
-    }
-    percentages = items;
-    for(i = 0, length = percentages.length; i < length; i++){
-        percentages[i][1] = percentages[i][1] / totalTime * 100;
-    }
-    drawChart(percentages);
-});
-
 function getTens(data, actions) {
     tens = {}
 
@@ -158,3 +118,43 @@ function drawChart(data) {
         .tickFormat("")
     );
 }
+
+document.getElementById('startDate').addEventListener('change', function(_) {
+    startDate = new Date(document.getElementById('startDate').value);
+    console.log("Start date changed");
+});
+document.getElementById('endDate').addEventListener('change', function(_) {
+    endDate = new Date(document.getElementById('endDate').value);
+    console.log("End date changed");
+});
+
+document.getElementById('fileInput').addEventListener('change', function(event) {
+    readInput(event);
+});
+
+document.getElementById('filter').addEventListener('click', function(_) {
+    filteredData = fullData.filter(d => {
+        const date = new Date(d.Date);
+        return date >= startDate && date <= endDate;
+    });
+    console.log("Filtered data now contains " + filteredData.length + " elements");
+});
+
+document.getElementById('buildCharts').addEventListener('click', function(_) {
+    tensOfMinutes = getTens(filteredData, actions);
+    delete tensOfMinutes["undefined"];
+    // console.log(tensOfMinutes);
+    items = Object.entries(tensOfMinutes);
+    // Sort in descending order by value
+    items.sort((a, b) => b[1] - a[1]);
+    // console.log(items);
+    totalTime = 0;
+    for (const [_, value] of items) {
+        totalTime += value;
+    }
+    // percentages = items;
+    for(i = 0, length = items.length; i < length; i++){
+        items[i][1] = items[i][1] / totalTime * 100;
+    }
+    drawChart(items);
+});
