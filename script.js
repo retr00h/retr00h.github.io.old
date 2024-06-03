@@ -42,6 +42,7 @@ function readInput(event) {
             });
             filteredData = fullData;
             console.log("Read data about " + filteredData.length + " days");
+            endDate = new Date(filteredData[filteredData.length - 1]['Date']);
         }
         reader.readAsText(file);
 
@@ -70,10 +71,13 @@ function getTens(data, actions) {
     return tens;
 }
 
-function drawChart(data) {
-    d3.select("#chart").select("svg").remove();
+function drawChart(data, containerId) {
+    console.log(data);
+    document.getElementById(containerId).style.display = 'block';
 
-    const svg = d3.select("#chart").append("svg")
+    d3.select(`#${containerId}`).select("svg").remove();
+
+    const svg = d3.select(`#${containerId}`).append("svg")
         .attr("width", "100%")
         .attr("height", "500px");
 
@@ -141,20 +145,65 @@ document.getElementById('filter').addEventListener('click', function(_) {
 });
 
 document.getElementById('buildCharts').addEventListener('click', function(_) {
-    tensOfMinutes = getTens(filteredData, actions);
-    delete tensOfMinutes["undefined"];
-    // console.log(tensOfMinutes);
-    items = Object.entries(tensOfMinutes);
-    // Sort in descending order by value
-    items.sort((a, b) => b[1] - a[1]);
-    // console.log(items);
-    totalTime = 0;
-    for (const [_, value] of items) {
-        totalTime += value;
+    lastMonthStartDate = new Date(endDate);
+    lastWeekStartDate = new Date(endDate);
+
+    lastMonthStartDate.setDate(lastMonthStartDate.getDate() - 30);
+    lastWeekStartDate.setDate(lastWeekStartDate.getDate() - 6);
+
+    const lastMonthData = filteredData.filter(d => {
+        const date = new Date(d.Date);
+        return date >= lastMonthStartDate && date <= endDate;
+    });
+    const lastWeekData = filteredData.filter(d => {
+        const date = new Date(d.Date);
+        return date >= lastWeekStartDate && date <= endDate;
+    });
+
+    fullDataTensOfMinutes = getTens(filteredData, actions);
+    lastMonthTensOfMinutes = getTens(lastMonthData, actions);
+    lastWeekTensOfMinutes = getTens(lastWeekData, actions);
+
+    delete fullDataTensOfMinutes["undefined"];
+    delete lastMonthTensOfMinutes["undefined"];
+    delete lastWeekTensOfMinutes["undefined"];
+
+    fullDataTensOfMinutes = Object.entries(fullDataTensOfMinutes);
+    lastMonthTensOfMinutes = Object.entries(lastMonthTensOfMinutes);
+    lastWeekTensOfMinutes = Object.entries(lastWeekTensOfMinutes);
+    
+    fullDataTensOfMinutes.sort((a, b) => b[1] - a[1]);
+    lastMonthTensOfMinutes.sort((a, b) => b[1] - a[1]);
+    lastWeekTensOfMinutes.sort((a, b) => b[1] - a[1]);
+
+    fullDataTotalTime = 0;
+    lastMonthTotalTime = 0;
+    lastWeekTotalTime = 0;
+
+    for (const [_, value] of fullDataTensOfMinutes) {
+        fullDataTotalTime += value;
     }
-    // percentages = items;
-    for(i = 0, length = items.length; i < length; i++){
-        items[i][1] = items[i][1] / totalTime * 100;
+    for (const [_, value] of lastMonthTensOfMinutes) {
+        lastMonthTotalTime += value;
     }
-    drawChart(items);
+    for (const [_, value] of lastWeekTensOfMinutes) {
+        lastWeekTotalTime += value;
+    }
+    
+    for(i = 0, length = fullDataTensOfMinutes.length; i < length; i++){
+        fullDataTensOfMinutes[i][1] = fullDataTensOfMinutes[i][1] / fullDataTotalTime * 100;
+    }
+    for(i = 0, length = lastMonthTensOfMinutes.length; i < length; i++){
+        lastMonthTensOfMinutes[i][1] = lastMonthTensOfMinutes[i][1] / lastMonthTotalTime * 100;
+    }
+    for(i = 0, length = lastWeekTensOfMinutes.length; i < length; i++){
+        lastWeekTensOfMinutes[i][1] = lastWeekTensOfMinutes[i][1] / lastWeekTotalTime * 100;
+    }
+
+    // document.getElementById('lastMonthChart').style.display = 'block';
+    // document.getElementById('lastWeekChart').style.display = 'block';
+    
+    drawChart(fullDataTensOfMinutes, "fullChart");
+    drawChart(lastMonthTensOfMinutes, "lastMonthChart");
+    drawChart(lastWeekTensOfMinutes, "lastWeekChart");
 });
