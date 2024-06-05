@@ -1,5 +1,6 @@
 let startDate = null;
 let endDate = null;
+let lastDate = null;
 let fullData = null;
 let actions = null;
 let filteredData = null;
@@ -41,8 +42,9 @@ function readInput(event) {
                 return ok;
             });
             filteredData = fullData;
+            console.log(filteredData);
+            lastDate = new Date(filteredData[filteredData.length - 1]['Date']);
             console.log("Read data about " + filteredData.length + " days");
-            endDate = new Date(filteredData[filteredData.length - 1]['Date']);
         }
         reader.readAsText(file);
 
@@ -50,6 +52,7 @@ function readInput(event) {
         document.getElementById('buildCharts').disabled = false; 
     }
 }
+
 function getTens(data, actions) {
     tens = {}
 
@@ -73,7 +76,7 @@ function getTens(data, actions) {
 
 function drawChart(data, containerId) {
     console.log(data);
-    document.getElementById(containerId).style.display = 'block';
+    document.getElementById(containerId).classList.remove('hidden');
 
     d3.select(`#${containerId}`).select("svg").remove();
 
@@ -139,25 +142,27 @@ document.getElementById('fileInput').addEventListener('change', function(event) 
 document.getElementById('filter').addEventListener('click', function(_) {
     filteredData = fullData.filter(d => {
         const date = new Date(d.Date);
-        return date >= startDate && date <= endDate;
+        v = date >= startDate && date <= endDate;
+        return v;
     });
+    lastDate = new Date(filteredData[filteredData.length - 1]['Date']);
     console.log("Filtered data now contains " + filteredData.length + " elements");
 });
 
 document.getElementById('buildCharts').addEventListener('click', function(_) {
-    lastMonthStartDate = new Date(endDate);
-    lastWeekStartDate = new Date(endDate);
+    lastMonthStartDate = new Date(lastDate);
+    lastWeekStartDate = new Date(lastDate);
 
     lastMonthStartDate.setDate(lastMonthStartDate.getDate() - 30);
     lastWeekStartDate.setDate(lastWeekStartDate.getDate() - 6);
 
     const lastMonthData = filteredData.filter(d => {
         const date = new Date(d.Date);
-        return date >= lastMonthStartDate && date <= endDate;
+        return date >= lastMonthStartDate && date <= lastDate;
     });
     const lastWeekData = filteredData.filter(d => {
         const date = new Date(d.Date);
-        return date >= lastWeekStartDate && date <= endDate;
+        return date >= lastWeekStartDate && date <= lastDate;
     });
 
     fullDataTensOfMinutes = getTens(filteredData, actions);

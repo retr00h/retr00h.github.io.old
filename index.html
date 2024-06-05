@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CSV Plotter</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/css/bootstrap.min.css" integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu" crossorigin="anonymous">
     <style>
         .chart {
             width: 80%;
@@ -35,24 +36,41 @@
     </style>
 </head>
 <body>
-    <h1>Daily data tracking plotter</h1>
-    <label>Start date: <input id="startDate" type="date"></label>
-    <label>End date: <input id="endDate" type="date"></label>
-    <input type="file" id="fileInput" accept=".csv">
-    <div>
-        <button id="filter" disabled="true">Filter data</button>
-        <button id="buildCharts" disabled="true">Build charts</button>
-    </div>
-    <div id="fullChart" class="chart hidden">
-        <h2>Full chart</h2>
-    </div>
-    <div id="lastMonthChart" class="chart hidden">
-        <h2>Last month chart</h2>
-    </div>
-    <div id="lastWeekChart" class="chart hidden">
-        <h2>Last week chart</h2>
+    <div class="container">
+        <h1 class="text-center my-4">Daily Data Tracking Plotter</h1>
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label for="startDate" class="form-label">Start Date:</label>
+                <input id="startDate" type="date" class="form-control">
+            </div>
+            <div class="col-md-6">
+                <label for="endDate" class="form-label">End Date:</label>
+                <input id="endDate" type="date" class="form-control">
+            </div>
+        </div>
+        <div class="mb-3">
+            <input type="file" id="fileInput" accept=".csv" class="form-control">
+        </div>
+        <div class="d-flex justify-content-between mb-4">
+            <button id="filter" class="btn btn-primary" disabled>Filter Data</button>
+            <button id="buildCharts" class="btn btn-success" disabled>Build Charts</button>
+        </div>
+        <div id="fullChart" class="chart hidden">
+            <h2 class="text-center">Full Chart</h2>
+            <!-- Chart will be rendered here -->
+        </div>
+        <div id="lastMonthChart" class="chart hidden">
+            <h2 class="text-center">Last Month Chart</h2>
+            <!-- Chart will be rendered here -->
+        </div>
+        <div id="lastWeekChart" class="chart hidden">
+            <h2 class="text-center">Last Week Chart</h2>
+            <!-- Chart will be rendered here -->
+        </div>
     </div>
 
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/js/bootstrap.min.js" integrity="sha384-aJ21OjlMXNL5UyIl/XNwTMqvzeRMZH2w8c5cRVpzpU8Y5bApTppSuUkhZXN0VxHd" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
     <script src="script.js"></script>
 </body>
