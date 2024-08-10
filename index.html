@@ -3,22 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CSV Plotter</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/css/bootstrap.min.css" integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu" crossorigin="anonymous">
+    <title>Daily Data Tracking Plotter</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
         .chart {
-            width: 80%;
-            height: 80%;
+            margin-bottom: 2rem;
         }
         .hidden {
             display: none;
-        }
+        }        
         body {
             font-family: Arial, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
             padding: 20px;
+        }
+        .emotion-insights {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            margin-top: 1rem;
+        }
+        .emotion-card {
+            width: 45%;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .emotion-card h3 {
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+        .emotion-card ol {
+            padding-left: 1.5rem;
         }
         h1 {
             margin-bottom: 20px;
@@ -33,6 +53,7 @@
         div {
             margin: 20px;
         }
+
     </style>
 </head>
 <body>
@@ -52,6 +73,7 @@
             </div>
         </div>
         <div class="mb-3">
+            <label for="fileInput" class="form-label">Day tracking data:</label>
             <input type="file" id="fileInput" accept=".csv" class="form-control">
         </div>
         <div class="d-flex justify-content-between mb-4">
@@ -60,14 +82,20 @@
         </div>
         <div id="fullChart" class="chart hidden">
             <h2 class="text-center">Full Chart</h2>
+            <p id="fullChartEmotionStats"></p>
+            <p id="fullChartCorrelations"></p>
             <!-- Chart will be rendered here -->
         </div>
         <div id="lastMonthChart" class="chart hidden">
             <h2 class="text-center">Last Month Chart</h2>
+            <p id="lastMonthChartEmotionStats"></p>
+            <p id="lastMonthCorrelations"></p>
             <!-- Chart will be rendered here -->
         </div>
         <div id="lastWeekChart" class="chart hidden">
             <h2 class="text-center">Last Week Chart</h2>
+            <p id="lastWeekChartEmotionStats"></p>
+            <p id="lastWeekCorrelations"></p>
             <!-- Chart will be rendered here -->
         </div>
     </div>

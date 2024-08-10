@@ -48,8 +48,8 @@ function readInput(event) {
         }
         reader.readAsText(file);
 
-        document.getElementById('filter').disabled = false; 
-        document.getElementById('buildCharts').disabled = false; 
+        document.getElementById('filter').disabled = false;
+        document.getElementById('buildCharts').disabled = false;
     }
 }
 
@@ -74,9 +74,77 @@ function getTens(data, actions) {
     return tens;
 }
 
-function drawChart(data, containerId) {
+function calculateSpearmanRho(x, y) {
+    const n = x.length;
+    if (n !== y.length) {
+        throw new Error("Arrays must have the same length");
+    }
+
+    // Rank the arrays
+    const rankX = rankData(x);
+    const rankY = rankData(y);
+
+    // Calculate the differences and square them
+    let sumDiffSquared = 0;
+    for (let i = 0; i < n; i++) {
+        const diff = rankX[i] - rankY[i];
+        sumDiffSquared += diff * diff;
+    }
+
+    // Calculate Spearman's Rho
+    const rho = 1 - (6 * sumDiffSquared) / (n * (n * n - 1));
+    return rho;
+}
+
+function rankData(arr) {
+    const sorted = arr.slice().sort((a, b) => a - b);
+    const ranks = arr.map(v => sorted.indexOf(v) + 1);
+    return ranks;
+}
+
+function getEmotions(data, actions) {
+    const emotionStats = {
+        Happiness: { sum: 0, count: 0, mean: 0, correlations: {} },
+        Sadness: { sum: 0, count: 0, mean: 0, correlations: {} },
+        Anger: { sum: 0, count: 0, mean: 0, correlations: {} },
+        Numbness: { sum: 0, count: 0, mean: 0, correlations: {} }
+    };
+
+    actions.forEach(action => {
+        ['Happiness', 'Sadness', 'Anger', 'Numbness'].forEach(emotion => {
+            emotionStats[emotion].correlations[action] = [];
+        });
+    });
+
+    // ... (data collection part remains the same)
+
+    // Calculate mean and Spearman's Rho correlations
+    for (let emotion in emotionStats) {
+        emotionStats[emotion].mean = emotionStats[emotion].sum / emotionStats[emotion].count;
+        
+        for (let action in emotionStats[emotion].correlations) {
+            const correlationData = emotionStats[emotion].correlations[action];
+            if (correlationData.length > 1) {
+                const emotionValues = correlationData.map(d => d.emotion);
+                const activityValues = correlationData.map(d => d.activity);
+                emotionStats[emotion].correlations[action] = calculateSpearmanRho(emotionValues, activityValues);
+            } else {
+                emotionStats[emotion].correlations[action] = 0; // Not enough data for correlation
+            }
+        }
+
+        const sortedCorrelations = Object.entries(emotionStats[emotion].correlations)
+            .sort((a, b) => b[1] - a[1]);
+        
+        emotionStats[emotion].topPositive = sortedCorrelations.slice(0, 5);
+        emotionStats[emotion].topNegative = sortedCorrelations.slice(-5).reverse();
+    }
+
+    return emotionStats;
+}
+
+function drawActivityChart(data, containerId) {
     console.log(data);
-    document.getElementById(containerId).classList.remove('hidden');
 
     d3.select(`#${containerId}`).select("svg").remove();
 
@@ -150,17 +218,21 @@ document.getElementById('filter').addEventListener('click', function(_) {
 });
 
 document.getElementById('buildCharts').addEventListener('click', function(_) {
+    document.getElementById("fullChart").classList.remove('hidden');
+    document.getElementById("lastMonthChart").classList.remove('hidden');
+    document.getElementById("lastWeekChart").classList.remove('hidden');
+
     lastMonthStartDate = new Date(lastDate);
     lastWeekStartDate = new Date(lastDate);
 
     lastMonthStartDate.setDate(lastMonthStartDate.getDate() - 30);
     lastWeekStartDate.setDate(lastWeekStartDate.getDate() - 6);
-
-    const lastMonthData = filteredData.filter(d => {
+    
+    lastMonthData = filteredData.filter(d => {
         const date = new Date(d.Date);
         return date >= lastMonthStartDate && date <= lastDate;
     });
-    const lastWeekData = filteredData.filter(d => {
+    lastWeekData = filteredData.filter(d => {
         const date = new Date(d.Date);
         return date >= lastWeekStartDate && date <= lastDate;
     });
@@ -208,7 +280,43 @@ document.getElementById('buildCharts').addEventListener('click', function(_) {
     // document.getElementById('lastMonthChart').style.display = 'block';
     // document.getElementById('lastWeekChart').style.display = 'block';
     
-    drawChart(fullDataTensOfMinutes, "fullChart");
-    drawChart(lastMonthTensOfMinutes, "lastMonthChart");
-    drawChart(lastWeekTensOfMinutes, "lastWeekChart");
+    drawActivityChart(fullDataTensOfMinutes, "fullChart");
+    drawActivityChart(lastMonthTensOfMinutes, "lastMonthChart");
+    drawActivityChart(lastWeekTensOfMinutes, "lastWeekChart");
+    
+    fullDataEmotions = getEmotions(filteredData, actions);
+    lastMonthEmotions = getEmotions(lastMonthData, actions);
+    lastWeekEmotions = getEmotions(lastWeekData, actions);
+
+    displayEmotionInsights(fullDataEmotions, "fullChart");
+    displayEmotionInsights(lastMonthEmotions, "lastMonthChart");
+    displayEmotionInsights(lastWeekEmotions, "lastWeekChart");
 });
+
+function displayEmotionInsights(emotions, containerId) {
+    const container = document.getElementById(containerId);
+    const insightsDiv = document.createElement('div');
+    insightsDiv.className = 'emotion-insights';
+    
+    for (const [emotion, stats] of Object.entries(emotions)) {
+        const emotionDiv = document.createElement('div');
+        emotionDiv.className = 'emotion-card';
+        
+        let positiveCorrelations = stats.topPositive.map(([activity, correlation]) => 
+            `<li>${activity}: ${correlation.toFixed(2)}</li>`).join('');
+        let negativeCorrelations = stats.topNegative.map(([activity, correlation]) => 
+            `<li>${activity}: ${correlation.toFixed(2)}</li>`).join('');
+
+        emotionDiv.innerHTML = `
+            <h3>${emotion}</h3>
+            <p>Mean: ${stats.mean.toFixed(2)}</p>
+            <h4>Top 5 Positive Correlations:</h4>
+            <ol>${positiveCorrelations}</ol>
+            <h4>Top 5 Negative Correlations:</h4>
+            <ol>${negativeCorrelations}</ol>
+        `;
+        insightsDiv.appendChild(emotionDiv);
+    }
+    
+    container.appendChild(insightsDiv);
+}
